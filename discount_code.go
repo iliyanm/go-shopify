@@ -2,6 +2,7 @@ package goshopify
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type DiscountCodeService interface {
 	Create(int64, PriceRuleDiscountCode) (*PriceRuleDiscountCode, error)
 	Update(int64, PriceRuleDiscountCode) (*PriceRuleDiscountCode, error)
 	List(int64) ([]PriceRuleDiscountCode, error)
+	ListWithPagination(interface{}) ([]PriceRuleDiscountCode, *Pagination, error)
 	Get(int64, int64) (*PriceRuleDiscountCode, error)
 	Delete(int64, int64) error
 }
@@ -22,6 +24,10 @@ type DiscountCodeService interface {
 // related methods of the Shopify API.
 type DiscountCodeServiceOp struct {
 	client *Client
+}
+
+type PriceRuleDiscountCodeListOptions struct {
+	ListOptions
 }
 
 // PriceRuleDiscountCode represents a Shopify Discount Code
@@ -68,6 +74,27 @@ func (s *DiscountCodeServiceOp) List(priceRuleID int64) ([]PriceRuleDiscountCode
 	resource := new(DiscountCodesResource)
 	err := s.client.Get(path, resource, nil)
 	return resource.DiscountCodes, err
+}
+
+func (s *DiscountCodeServiceOp) ListWithPagination(options interface{}) ([]PriceRuleDiscountCode, *Pagination, error) {
+	path := fmt.Sprintf("%s.json", discountCodeBasePath)
+	resource := new(DiscountCodesResource)
+	headers := http.Header{}
+
+	headers, err := s.client.createAndDoGetHeaders("GET", path, nil, options, resource)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Extract pagination info from header
+	linkHeader := headers.Get("Link")
+
+	pagination, err := extractPagination(linkHeader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resource.DiscountCodes, pagination, nil
 }
 
 // Get a single discount code

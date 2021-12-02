@@ -1,7 +1,9 @@
 package goshopify
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -17,6 +19,7 @@ type PriceRuleService interface {
 	Create(PriceRule) (*PriceRule, error)
 	Update(PriceRule) (*PriceRule, error)
 	List() ([]PriceRule, error)
+	ListWithPagination(interface{}) ([]PriceRule, *Pagination, error)
 	Delete(int64) error
 }
 
@@ -35,7 +38,7 @@ type PriceRule struct {
 	TargetType                             string                                  `json:"target_type,omitempty"`
 	TargetSelection                        string                                  `json:"target_selection,omitempty"`
 	AllocationMethod                       string                                  `json:"allocation_method,omitempty"`
-	AllocationLimit                        string                                  `json:"allocation_limit,omitempty"`
+	AllocationLimit                        json.RawMessage                         `json:"allocation_limit,omitempty"`
 	OncePerCustomer                        bool                                    `json:"once_per_customer,omitempty"`
 	UsageLimit                             int                                     `json:"usage_limit,omitempty"`
 	StartsAt                               *time.Time                              `json:"starts_at,omitempty"`
@@ -82,6 +85,10 @@ type PriceRuleResource struct {
 // PriceRulesResource represents the result from the price_rules.json endpoint
 type PriceRulesResource struct {
 	PriceRules []PriceRule `json:"price_rules"`
+}
+
+type PriceRulesListOptions struct {
+	ListOptions
 }
 
 // SetPrerequisiteSubtotalRange sets or clears the subtotal range for which a cart must lie within to qualify for the price-rule
@@ -147,7 +154,7 @@ func (pr *PriceRule) SetPrerequisiteToEntitlementQuantityRatio(prerequisiteQuant
 
 	pr.PrerequisiteToEntitlementQuantityRatio = &prerequisiteToEntitlementQuantityRatio{
 		PrerequisiteQuantity: pQuant,
-		EntitledQuantity: eQuant,
+		EntitledQuantity:     eQuant,
 	}
 }
 
@@ -165,6 +172,27 @@ func (s *PriceRuleServiceOp) List() ([]PriceRule, error) {
 	resource := new(PriceRulesResource)
 	err := s.client.Get(path, resource, nil)
 	return resource.PriceRules, err
+}
+
+func (s *PriceRuleServiceOp) ListWithPagination(options interface{}) ([]PriceRule, *Pagination, error) {
+	path := fmt.Sprintf("%s.json", priceRulesBasePath)
+	resource := new(PriceRulesResource)
+	headers := http.Header{}
+
+	headers, err := s.client.createAndDoGetHeaders("GET", path, nil, options, resource)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Extract pagination info from header
+	linkHeader := headers.Get("Link")
+
+	pagination, err := extractPagination(linkHeader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resource.PriceRules, pagination, nil
 }
 
 // Create creates a price rule
