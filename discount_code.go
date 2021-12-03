@@ -16,6 +16,7 @@ type DiscountCodeService interface {
 	Update(int64, PriceRuleDiscountCode) (*PriceRuleDiscountCode, error)
 	List(int64) ([]PriceRuleDiscountCode, error)
 	ListWithPagination(interface{}) ([]PriceRuleDiscountCode, *Pagination, error)
+	Count(interface{}) (int, error)
 	Get(int64, int64) (*PriceRuleDiscountCode, error)
 	Delete(int64, int64) error
 }
@@ -95,6 +96,12 @@ func (s *DiscountCodeServiceOp) ListWithPagination(options interface{}) ([]Price
 	}
 
 	return resource.DiscountCodes, pagination, nil
+}
+
+// Count discount codes
+func (s *DiscountCodeServiceOp) Count(options interface{}) (int, error) {
+	path := fmt.Sprintf("%s/count.json", discountCodeBasePath)
+	return s.client.Count(path, options)
 }
 
 // Get a single discount code

@@ -20,6 +20,7 @@ type PriceRuleService interface {
 	Update(PriceRule) (*PriceRule, error)
 	List() ([]PriceRule, error)
 	ListWithPagination(interface{}) ([]PriceRule, *Pagination, error)
+	Count(interface{}) (int, error)
 	Delete(int64) error
 }
 
@@ -193,6 +194,12 @@ func (s *PriceRuleServiceOp) ListWithPagination(options interface{}) ([]PriceRul
 	}
 
 	return resource.PriceRules, pagination, nil
+}
+
+// Count price rules
+func (s *PriceRuleServiceOp) Count(options interface{}) (int, error) {
+	path := fmt.Sprintf("%s/count.json", priceRulesBasePath)
+	return s.client.Count(path, options)
 }
 
 // Create creates a price rule
