@@ -15,8 +15,8 @@ type DiscountCodeService interface {
 	Create(int64, PriceRuleDiscountCode) (*PriceRuleDiscountCode, error)
 	Update(int64, PriceRuleDiscountCode) (*PriceRuleDiscountCode, error)
 	List(int64) ([]PriceRuleDiscountCode, error)
-	ListWithPagination(interface{}) ([]PriceRuleDiscountCode, *Pagination, error)
-	Count(interface{}) (int, error)
+	ListWithPagination(int64, interface{}) ([]PriceRuleDiscountCode, *Pagination, error)
+	Count(int64, interface{}) (int, error)
 	Get(int64, int64) (*PriceRuleDiscountCode, error)
 	Delete(int64, int64) error
 }
