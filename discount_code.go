@@ -77,8 +77,8 @@ func (s *DiscountCodeServiceOp) List(priceRuleID int64) ([]PriceRuleDiscountCode
 	return resource.DiscountCodes, err
 }
 
-func (s *DiscountCodeServiceOp) ListWithPagination(options interface{}) ([]PriceRuleDiscountCode, *Pagination, error) {
-	path := fmt.Sprintf("%s.json", discountCodeBasePath)
+func (s *DiscountCodeServiceOp) ListWithPagination(priceRuleID int64, options interface{}) ([]PriceRuleDiscountCode, *Pagination, error) {
+	path := fmt.Sprintf(discountCodeBasePath+".json", priceRuleID)
 	resource := new(DiscountCodesResource)
 	headers := http.Header{}
 
@@ -99,8 +99,8 @@ func (s *DiscountCodeServiceOp) ListWithPagination(options interface{}) ([]Price
 }
 
 // Count discount codes
-func (s *DiscountCodeServiceOp) Count(options interface{}) (int, error) {
-	path := fmt.Sprintf("%s/count.json", discountCodeBasePath)
+func (s *DiscountCodeServiceOp) Count(priceRuleID int64, options interface{}) (int, error) {
+	path := fmt.Sprintf(discountCodeBasePath+"/count.json", priceRuleID)
 	return s.client.Count(path, options)
 }
 
