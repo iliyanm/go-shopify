@@ -2,6 +2,7 @@ package goshopify
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -10,6 +11,7 @@ import (
 // https://help.shopify.com/api/reference/fulfillment
 type FulfillmentService interface {
 	List(interface{}) ([]Fulfillment, error)
+	ListWithPagination(interface{}) ([]Fulfillment, *Pagination, error)
 	Count(interface{}) (int, error)
 	Get(int64, interface{}) (*Fulfillment, error)
 	Create(Fulfillment) (*Fulfillment, error)
@@ -84,6 +86,28 @@ func (s *FulfillmentServiceOp) List(options interface{}) ([]Fulfillment, error) 
 	resource := new(FulfillmentsResource)
 	err := s.client.Get(path, resource, options)
 	return resource.Fulfillments, err
+}
+
+func (s *FulfillmentServiceOp) ListWithPagination(options interface{}) ([]Fulfillment, *Pagination, error) {
+	prefix := FulfillmentPathPrefix(s.resource, s.resourceID)
+	path := fmt.Sprintf("%s.json", prefix)
+	resource := new(FulfillmentsResource)
+	headers := http.Header{}
+
+	headers, err := s.client.createAndDoGetHeaders("GET", path, nil, options, resource)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Extract pagination info from header
+	linkHeader := headers.Get("Link")
+
+	pagination, err := extractPagination(linkHeader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resource.Fulfillments, pagination, nil
 }
 
 // Count fulfillments
